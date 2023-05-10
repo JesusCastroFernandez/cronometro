@@ -1,0 +1,29 @@
+-module(cronometer).
+-export([start/0, stop/1]).
+
+start() ->
+    {start, erlang:now()}.
+
+stop({start, StartTime}) ->
+    Now = erlang:now(),
+    {Microseconds, _} = timer:now_diff(Now, StartTime),
+    Seconds = Microseconds / 1000000,
+    io:format("~.2f seconds~n", [Seconds]);
+stop(_) ->
+    io:format("Error: invalid timer state~n").
+
+loop({start, StartTime}) ->
+    receive
+        stop ->
+            stop({start, StartTime});
+        _ ->
+            Now = erlang:now(),
+            {Microseconds, _} = timer:now_diff(Now, StartTime),
+            Seconds = Microseconds / 1000000,
+            io:format("~.2f seconds~n", [Seconds]),
+            loop({start, StartTime})
+    end.
+
+start_loop() ->
+    loop(start()).
+
